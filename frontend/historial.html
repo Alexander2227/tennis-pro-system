@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Bitácora Maestra - Círculo Militar</title>
+  
+  <link rel="stylesheet" href="styles.css"> 
+  <link rel="stylesheet" href="admin.css"> 
+  <link rel="stylesheet" href="historial.css"> 
+  
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+</head>
+<body class="admin-body">
+
+  <div class="admin-layout">
+    <aside class="sidebar">
+      <div class="sidebar-header"><h2>CÍRCULO MILITAR</h2></div>
+      <nav>
+        <div class="nav-item" onclick="window.location.href='admin-dashboard.html'">
+            <span class="material-icons-round">analytics</span> <span>Dashboard</span>
+        </div>
+        <div class="nav-item active">
+            <span class="material-icons-round">history</span> <span>Historial</span>
+        </div>
+      </nav>
+      <button class="logout-btn-admin" onclick="localStorage.clear(); window.location.href='login.html'">
+          <span class="material-icons-round">logout</span> <span>Salir</span>
+      </button>
+    </aside>
+
+    <main class="main-content">
+      <div class="header-bar">
+        <h1>Bitácora Maestra</h1>
+        <span style="color:var(--texto-claro)">Admin: <b style="color:var(--vino)">...</b></span>
+      </div>
+
+      <div class="history-section">
+          
+          <div class="search-bar-container">
+              <span class="material-icons-round" style="color:#999; margin-left:10px;">search</span>
+              <input type="text" id="search-input" class="search-input" placeholder="Buscar por Nombre, DUI, Pasaporte o Código..." onkeyup="if(event.key==='Enter') buscarHistorial()">
+              <button onclick="buscarHistorial()" class="btn-search">BUSCAR</button>
+          </div>
+
+          <div class="demographics-grid">
+              <div class="demo-card card-blue">
+                  <h4>Resultados</h4><p id="h-total">0</p>
+              </div>
+              <div class="demo-card card-gold">
+                  <h4>Mayores (+18)</h4><p id="h-mayores">0</p>
+              </div>
+              <div class="demo-card card-purple">
+                  <h4>Menores (-18)</h4><p id="h-menores">0</p>
+              </div>
+              <div class="demo-card card-cyan">
+                  <h4>Extranjeros</h4><p id="h-extranjeros">0</p>
+              </div>
+          </div>
+
+          <div style="text-align:right; margin-bottom:1rem;">
+              <button onclick="descargarPDFHistorial()" style="background:white; border:2px solid var(--vino); color:var(--vino); padding:0.6rem 1.5rem; border-radius:8px; cursor:pointer; font-weight:800; transition:0.2s;">
+                  📄 EXPORTAR PDF
+              </button>
+          </div>
+
+          <div class="history-card">
+              <div class="table-container">
+                  <table class="history-table">
+                      <thead>
+                          <tr>
+                              <th>Fecha</th>
+                              <th>Cliente</th>
+                              <th>Edad / Doc</th>
+                              <th>Código</th>
+                              <th>Estado</th>
+                              <th>Acción</th>
+                          </tr>
+                      </thead>
+                      <tbody id="historial-body">
+                          <tr><td colspan="6" style="text-align:center; padding:3rem; color:#999;">Cargando datos...</td></tr>
+                      </tbody>
+                  </table>
+              </div>
+          </div>
+
+      </div>
+    </main>
+  </div>
+
+  <div id="detail-modal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:3000; justify-content:center; align-items:center;">
+      <div class="detail-modal-content">
+          <span onclick="document.getElementById('detail-modal').style.display='none'" style="position:absolute; top:20px; right:20px; cursor:pointer; font-size:1.5rem; color:#999;">&times;</span>
+          <h3 style="color:var(--vino); border-bottom:1px solid #eee; padding-bottom:1rem; margin-top:0;">Ficha de Reserva</h3>
+          <div class="detail-grid">
+              <div class="detail-item"><small>Cliente</small><p id="d-cliente">-</p></div>
+              <div class="detail-item"><small>Código</small><p id="d-codigo" style="color:var(--dorado);">-</p></div>
+              <div class="detail-item"><small>Nacimiento</small><p id="d-nacimiento">-</p></div>
+              <div class="detail-item"><small>Documento</small><p id="d-doc">-</p></div>
+              <div class="detail-item"><small>Fecha Clase</small><p id="d-fecha">-</p></div>
+              <div class="detail-item"><small>Servicio</small><p id="d-tipo">-</p></div>
+              <div class="detail-item"><small>Llegada</small><p id="d-llegada">-</p></div>
+              <div class="detail-item"><small>Estado</small><p id="d-estado">-</p></div>
+          </div>
+      </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('tennispro_token');
+    const profesor = JSON.parse(localStorage.getItem('tennispro_profesor'));
+    if(!token || profesor.rol !== 'admin') window.location.href = 'login.html';
+    document.getElementById('admin-name').innerText = profesor.nombre;
+
+    let historialCache = [];
+    function formatFecha(f) { if(!f)return''; const p=f.split('-'); if(p.length===3)return`${p[2]}/${p[1]}/${p[0]}`; return f; }
+
+    async function buscarHistorial() {
+        const q = document.getElementById('search-input').value;
+        const tbody = document.getElementById('historial-body');
+        
+        try {
+            const res = await fetch(`http://localhost:3000/api/admin/historial?busqueda=${q}`, { headers: {'Authorization': `Bearer ${token}`} });
+            const data = await res.json();
+            historialCache = data;
+            tbody.innerHTML = '';
+
+            if(data.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:3rem;">No hay resultados.</td></tr>'; return; }
+            
+            let may=0, men=0, ext=0;
+            data.forEach((r, i) => {
+                if(r.edad >= 18) may++; else men++;
+                if(r.nacionalidad === 'extranjero') ext++;
+
+                let doc = r.edad < 18 ? '<span class="badge bg-green">Menor</span>' : (r.dui || r.pasaporte || 'N/A');
+                let color = 'bg-gray';
+                if(r.estado.includes('confirmada')) color='bg-green';
+                else if(r.estado==='ausente') color='bg-red';
+                else if(r.estado==='confirmada_tarde') color='bg-orange';
+                else color='bg-yellow'; 
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>
+                            <span class="main-text">${formatFecha(r.fechaReserva)}</span>
+                            <span class="sub-text">${r.horaReserva}</span>
+                        </td>
+                        <td>
+                            <span class="main-text">${r.nombre} ${r.apellido}</span>
+                            <span class="sub-text">${r.nacionalidad}</span>
+                        </td>
+                        <td>
+                            <span class="main-text">${r.edad} años</span>
+                            <span class="sub-text">${doc}</span>
+                        </td>
+                        <td><span style="font-family:monospace; color:var(--vino); font-weight:bold; font-size:1rem;">${r.keyUnica}</span></td>
+                        <td><span class="badge ${color}">${r.estado.toUpperCase()}</span></td>
+                        <td><button class="btn-view-detail" onclick="verDetalle(${i})">Ver Ficha</button></td>
+                    </tr>`;
+            });
+            document.getElementById('h-total').innerText = data.length;
+            document.getElementById('h-mayores').innerText = may;
+            document.getElementById('h-menores').innerText = men;
+            document.getElementById('h-extranjeros').innerText = ext;
+
+        } catch(e) { console.error(e); }
+    }
+    
+    function verDetalle(i) {
+        const d = historialCache[i];
+        document.getElementById('d-cliente').innerText = `${d.nombre} ${d.apellido}`;
+        document.getElementById('d-codigo').innerText = d.keyUnica;
+        document.getElementById('d-nacimiento').innerText = `${formatFecha(d.fechaNacimiento)} (${d.edad} años)`;
+        document.getElementById('d-doc').innerText = d.dui || d.pasaporte || 'Menor';
+        document.getElementById('d-fecha').innerText = `${formatFecha(d.fechaReserva)} @ ${d.horaReserva}`;
+        document.getElementById('d-tipo').innerText = d.tipo_reserva;
+        document.getElementById('d-llegada').innerText = d.hora_llegada ? new Date(d.hora_llegada).toLocaleTimeString() : 'Pendiente';
+        document.getElementById('d-estado').innerText = d.estado.toUpperCase();
+        document.getElementById('detail-modal').style.display = 'flex';
+    }
+    
+    function descargarPDFHistorial() {
+        const q = document.getElementById('search-input').value;
+        window.open(`http://localhost:3000/api/admin/historial-pdf?busqueda=${q}&token=${token}`, '_blank');
+    }
+
+    buscarHistorial();
+  </script>
+</body>
+</html>

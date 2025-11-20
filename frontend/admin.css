@@ -1,0 +1,72 @@
+/* ==================================
+   ARCHIVO: frontend/admin.css
+   Diseño Profesional de Panel de Control (Sidebar + Content)
+   ================================== */
+
+body.admin-body {
+  background-image: none !important; 
+  background-color: var(--fondo-admin); /* Fondo gris claro */
+  display: block !important; 
+  color: var(--texto-oscuro);
+  min-height: 100vh;
+}
+
+.admin-layout { display: flex; min-height: 100vh; width: 100%; }
+
+/* --- SIDEBAR --- */
+.sidebar {
+  width: 260px; background: var(--vino); color: white; padding: 1.5rem;
+  display: flex; flex-direction: column; position: fixed; height: 100vh; left: 0; top: 0;
+  box-shadow: 4px 0 20px rgba(0,0,0,0.1); z-index: 1000;
+}
+.sidebar h2 { color: var(--dorado); text-align: center; font-size: 1.5rem; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); letter-spacing: 1px; }
+.nav-item { padding: 0.9rem 1.2rem; margin-bottom: 0.5rem; border-radius: 8px; cursor: pointer; color: rgba(255,255,255,0.8); font-weight: 500; transition: all 0.2s; display: flex; align-items: center; gap: 10px; }
+.nav-item:hover { background: rgba(255,255,255,0.1); color: white; }
+.nav-item.active { background: var(--dorado); color: var(--vino); font-weight: 700; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+.logout-btn-admin { margin-top: auto; background: rgba(0,0,0,0.2); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 0.8rem; border-radius: 8px; cursor: pointer; width: 100%; text-align: center; font-size: 0.9rem; }
+.logout-btn-admin:hover { background: rgba(0,0,0,0.4); }
+
+/* --- CONTENIDO PRINCIPAL --- */
+.main-content { margin-left: 260px; width: calc(100% - 260px); padding: 2rem 3rem; overflow-y: auto; }
+.header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem; }
+.header-bar h1 { font-size: 2rem; color: var(--texto-oscuro); font-weight: 800; margin: 0; }
+
+/* --- BARRA DE CONTROL DE FECHAS (NUEVO) --- */
+.date-control-bar {
+  background: white; padding: 1rem 1.5rem; border-radius: 12px;
+  display: flex; align-items: center; gap: 1.5rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 2rem;
+  border: 1px solid #e5e7eb;
+}
+.date-group { display: flex; align-items: center; gap: 10px; }
+.date-group label { font-weight: 700; color: var(--texto-claro); font-size: 0.9rem; text-transform: uppercase; }
+.date-input-small { padding: 0.6rem; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem; color: var(--texto-oscuro); outline: none; }
+.date-input-small:focus { border-color: var(--dorado); }
+
+.btn-update {
+  background: var(--vino); color: white; border: none; padding: 0.7rem 2rem;
+  border-radius: 8px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 10px rgba(102,0,0,0.2);
+  transition: transform 0.2s; margin: 0; /* Reset margin global */
+}
+.btn-update:hover { background: #4a0404; transform: translateY(-2px); }
+
+/* --- TARJETAS Y GRÁFICOS --- */
+.card { background: white; padding: 1.5rem; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); border: 1px solid #f1f5f9; margin-bottom: 2rem; }
+.metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+.metric-card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border-left: 5px solid var(--dorado); display: flex; flex-direction: column; }
+.metric-card p { font-size: 2.5rem; font-weight: bold; margin: 0.5rem 0 0; color: var(--vino); }
+.metric-card h4 { margin: 0; font-size: 0.85rem; color: var(--texto-claro); text-transform: uppercase; letter-spacing: 0.5px; }
+
+.charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+.filter-chip { padding: 0.5rem 1.2rem; border: 1px solid #ddd; border-radius: 50px; background: white; cursor: pointer; font-size: 0.85rem; font-weight: 600; margin-right: 5px; }
+.filter-chip.active { background: var(--vino); color: white; border-color: var(--vino); }
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .sidebar { width: 70px; padding: 1rem 0.5rem; }
+  .sidebar h2, .nav-item span, .logout-btn-admin span { display: none; }
+  .nav-item { justify-content: center; }
+  .main-content { margin-left: 70px; width: calc(100% - 70px); padding: 1.5rem; }
+  .date-control-bar { flex-direction: column; align-items: flex-start; }
+  .btn-update { width: 100%; }
+}

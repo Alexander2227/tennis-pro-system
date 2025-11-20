@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Círculo Militar - Acceso Admin</title>
+  
+  <link rel="stylesheet" href="styles.css">
+  
+</head>
+<body>
+
+  <div id="gradient-bg"></div>
+  
+  <div id="root">
+    
+    <div class="lang-switcher">
+      <button id="lang-toggle">English</button>
+    </div>
+    
+    <h1 class="logo-title">CÍRCULO MILITAR</h1>
+    <h2 id="form-title">Acceso de Profesores</h2>
+    
+    <form id="login-form">
+      <div class="form-group">
+        <input type="email" id="email" name="email" placeholder="Correo Electrónico" required>
+      </div>
+      <div class="form-group">
+        <input type="password" id="password" name="password" placeholder="Contraseña" required>
+      </div>
+      <button type="submit" id="btn-submit">Ingresar</button>
+    </form>
+    
+    <div id="status-message"></div>
+  </div>
+
+  <script>
+    // --- (Definición de Textos 'translations' - sin cambios) ---
+    const translations = {
+      es: {
+        title: "Acceso de Profesores",
+        ph_email: "Correo Electrónico",
+        ph_password: "Contraseña",
+        btn_submit: "Ingresar",
+        status_enviando: "Verificando...",
+        toggle_lang_btn: "English",
+        invalid_credentials: "Credenciales inválidas."
+      },
+      en: {
+        title: "Instructor Access",
+        ph_email: "Email Address",
+        ph_password: "Password",
+        btn_submit: "Login",
+        status_enviando: "Verifying...",
+        toggle_lang_btn: "Español",
+        invalid_credentials: "Invalid credentials."
+      }
+    };
+
+    // --- (Variables y Punteros - sin cambios) ---
+    let currentLang = 'es';
+    const langToggleBtn = document.getElementById('lang-toggle');
+    const form = document.getElementById('login-form');
+    const statusMessage = document.getElementById('status-message');
+    const formTitle = document.getElementById('form-title');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const btnSubmit = document.getElementById('btn-submit');
+
+    // --- (Función de Traducción 'setLanguage' - sin cambios) ---
+    function setLanguage(lang) {
+      currentLang = lang;
+      const t = translations[lang];
+      formTitle.textContent = t.title;
+      langToggleBtn.textContent = t.toggle_lang_btn;
+      btnSubmit.textContent = t.btn_submit;
+      emailInput.placeholder = t.ph_email;
+      passwordInput.placeholder = t.ph_password;
+    }
+
+    // --- Event Listeners ---
+    langToggleBtn.addEventListener('click', () => {
+      const newLang = (currentLang === 'es') ? 'en' : 'es';
+      setLanguage(newLang);
+    });
+    
+    // --- ==================================
+    //     ¡SUBMIT DE LOGIN (ACTUALIZADO)!
+    // --- ==================================
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      statusMessage.textContent = translations[currentLang].status_enviando;
+      statusMessage.className = '';
+
+      const email = emailInput.value;
+      const password = passwordInput.value;
+
+      fetch('http://localhost:3000/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, password: password }),
+      })
+      .then(response => {
+        return response.json().then(data => {
+          if (!response.ok) {
+            let errorMsg = data.message;
+            if (currentLang === 'en' && errorMsg === "Credenciales inválidas.") {
+              errorMsg = translations.en.invalid_credentials;
+            }
+            throw new Error(errorMsg);
+          }
+          return data;
+        });
+      })
+      .then(data => {
+        // --- ¡ÉXITO! ---
+        console.log('Login exitoso, rol:', data.profesor.rol);
+        
+        // Guardamos la "llave" (token)
+        localStorage.setItem('tennispro_token', data.token);
+        localStorage.setItem('tennispro_profesor', JSON.stringify(data.profesor));
+
+        // --- ¡NUEVA LÓGICA DE REDIRECCIÓN! ---
+        if (data.profesor.rol === 'admin') {
+          // ¡Es Admin! Lo mandamos al dashboard de admin
+          window.location.href = 'admin-dashboard.html'; // (Aún no existe, dará 404)
+        } else {
+          // Es Profesor. Lo mandamos al dashboard normal
+          window.location.href = 'dashboard.html';
+        }
+      })
+      .catch(error => {
+        console.error('Error en el login:', error);
+        statusMessage.textContent = error.message;
+        statusMessage.className = 'error';
+      });
+    });
+
+    // --- Inicialización ---
+    setLanguage(currentLang);
+
+  </script>
+</body>
+</html>

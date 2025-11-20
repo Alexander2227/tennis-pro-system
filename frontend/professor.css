@@ -1,0 +1,41 @@
+:root {
+  --vino: #7b1f1f;
+  --vino-claro: #a94442;
+  --dorado: #d4af37;
+  --fondo-admin: #f8f9fa;
+  --texto-claro: #333;
+}
+
+/* ==================================
+   ARCHIVO: frontend/professor.css
+   ================================== */
+body.profesor-body {
+  background-image: linear-gradient(135deg, rgba(102,0,0,0.85), rgba(75,0,0,0.9)), url('fondo-cancha.jpg');
+  background-size: cover; background-position: center; background-attachment: fixed;
+  display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 2rem;
+}
+
+/* ...el resto de tu CSS... */
+@media (min-width: 768px) { .profesor-layout { grid-template-columns: 1fr 1fr; align-items: start; } .profesor-header { grid-column: 1 / -1; } }
+
+.profesor-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(0,0,0,0.05); }
+.profesor-header h1 { color: var(--vino); font-size: 1.8rem; margin: 0; }
+.profesor-header p { color: var(--dorado); font-size: 1rem; font-weight: bold; margin: 0; }
+.btn-logout { background: transparent; color: var(--texto-claro); border: 1px solid #ccc; padding: 0.5rem 1rem; font-size: 0.85rem; width: auto; margin: 0; }
+.btn-logout:hover { background: var(--vino); color: white; border-color: var(--vino); }
+
+.profesor-card { background: var(--fondo-admin); border-radius: 16px; padding: 2rem; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; height: 100%; text-align: center; }
+.profesor-card h3 { color: var(--vino); font-size: 1.4rem; margin-bottom: 1.5rem; font-weight: 800; }
+.profesor-card input[type="text"] { max-width: 250px; text-align: center; font-size: 1.5rem; letter-spacing: 4px; padding: 1rem; margin: 0 auto; display: block; text-transform: uppercase; }
+.profesor-card button { width: 100%; max-width: 250px; margin: 1.5rem auto 0; padding: 1.2rem; background: var(--vino); color: white; font-weight: 700; }
+.profesor-card button:hover { background: var(--vino-claro); }
+
+.metric-container { display: flex; gap: 1rem; justify-content: center; margin-bottom: 1.5rem; }
+.metric-item { flex: 1; background: #fff; padding: 1rem; border-radius: 12px; border: 1px solid #eee; }
+.metric-value { font-size: 2.5rem; font-weight: 800; color: var(--dorado); margin: 0; line-height: 1; }
+.metric-label { font-size: 0.75rem; text-transform: uppercase; color: #999; font-weight: 600; }
+
+.pending-classes ul { list-style: none; padding: 0; max-height: 200px; overflow-y: auto; text-align: left; }
+.pending-classes li { display: flex; justify-content: space-between; padding: 0.8rem; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+.pending-classes .time { font-weight: 700; color: var(--dorado); }
+.pending-classes .no-pending { text-align: center; color: #ccc; padding: 1rem; font-style: italic; }

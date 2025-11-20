@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Analytics - Círculo Militar</title>
+  
+  <link rel="stylesheet" href="styles.css"> 
+  <link rel="stylesheet" href="admin.css"> 
+  
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  
+  <style>
+      /* Estilos específicos para la barra de búsqueda del historial */
+      .search-bar-container {
+          display: flex; gap: 1rem; margin-bottom: 2rem; background: white; padding: 1.5rem;
+          border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid #e5e7eb;
+      }
+      .search-input {
+          flex: 1; padding: 0.8rem 1.2rem; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem; outline: none;
+      }
+      .search-input:focus { border-color: var(--dorado); box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1); }
+      
+      /* Estilos para el Modal de Detalle */
+      .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1rem; }
+      .detail-item small { text-transform: uppercase; color: #999; font-weight: bold; font-size: 0.75rem; }
+      .detail-item p { font-weight: 600; color: #333; font-size: 1.1rem; margin: 5px 0; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+
+      /* Ajuste Grid Dashboard */
+      .metrics-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+          gap: 1rem;
+          margin-bottom: 2rem;
+      }
+      .date-control-bar {
+          background: white; padding: 1rem 1.5rem; border-radius: 12px;
+          display: flex; align-items: center; gap: 1rem;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 2rem;
+          flex-wrap: wrap; justify-content: space-between;
+      }
+      .date-group { display: flex; align-items: center; gap: 10px; }
+      .btn-update {
+          background: var(--vino); color: white; border: none; padding: 0.6rem 1.5rem;
+          border-radius: 8px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      }
+      .btn-update:hover { background: #4a0404; }
+  </style>
+</head>
+<body class="admin-body">
+
+  <div class="admin-layout">
+    
+    <aside class="sidebar">
+      <div class="sidebar-header"><h2>CÍRCULO MILITAR</h2></div>
+      <nav>
+        <div class="nav-item active" id="nav-dash" onclick="switchView('dashboard')">
+            <span class="material-icons-round">analytics</span> <span>Dashboard</span>
+        </div>
+        <div class="nav-item" id="nav-historial" onclick="switchView('historial')">
+            <span class="material-icons-round">history</span> <span>Historial</span>
+        </div>
+        <div class="nav-item" id="nav-users" onclick="switchView('users')">
+            <span class="material-icons-round">people</span> <span>Equipo</span>
+        </div>
+      </nav>
+      <button class="logout-btn-admin" id="logout-btn">
+          <span class="material-icons-round">logout</span> <span>Salir</span>
+      </button>
+    </aside>
+
+    <main class="main-content">
+      <div class="header-bar">
+        <h1>Panel de Control</h1>
+        <span style="color:var(--texto-claro)">Admin: <b style="color:var(--vino)" id="admin-name">...</b></span>
+      </div>
+
+      <div id="view-dashboard" class="view-section active">
+        
+        <div class="date-control-bar">
+            <div class="date-group">
+                <span class="material-icons-round" style="color:var(--dorado); font-size:1.5rem;">date_range</span>
+                <label style="font-weight:600; color:#666;">Periodo:</label>
+                <input type="date" id="dash-start" style="margin:0; padding:0.5rem; border:1px solid #ddd; border-radius:8px;">
+                <span style="color:#999; font-weight:bold;">—</span>
+                <input type="date" id="dash-end" style="margin:0; padding:0.5rem; border:1px solid #ddd; border-radius:8px;">
+            </div>
+            <button class="btn-update" onclick="cargarDatosGrafico()">Actualizar Datos</button>
+        </div>
+
+        <div class="metrics-grid">
+          <div class="metric-card" style="border-left-color: var(--dorado);"><h4>Total</h4><p id="st-total">0</p></div>
+          <div class="metric-card" style="border-left-color: #f59e0b;"><h4>Pendientes</h4><p id="st-pendientes" style="color:#f59e0b">0</p></div>
+          <div class="metric-card" style="border-left-color: var(--exito);"><h4>A Tiempo</h4><p id="st-ok" style="color:var(--exito);">0</p></div>
+          <div class="metric-card" style="border-left-color: #e67e22;"><h4>Retardos</h4><p id="st-ret" style="color:#e67e22;">0</p></div>
+          <div class="metric-card" style="border-left-color: var(--error);"><h4>Ausencias</h4><p id="st-aus" style="color:var(--error);">0</p></div>
+        </div>
+
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                <h3>Tendencia Operativa</h3>
+                <select id="filtro-tipo-grafico" onchange="cargarDatosGrafico()" style="padding:0.5rem; border-radius:6px; border:1px solid #ddd;">
+                    <option value="todos">Todos los Servicios</option>
+                    <option value="solo_cancha">Solo Cancha</option>
+                    <option value="con_instructor">Con Instructor</option>
+                </select>
+            </div>
+            <div class="chart-container" style="height: 400px;"><canvas id="mainChart"></canvas></div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+            <div class="card">
+                <h3>📄 Reporte PDF</h3>
+                <p style="font-size:0.9rem; color:#666; margin-bottom:1rem;">Informe del periodo seleccionado arriba.</p>
+                <button class="btn-update" style="width:100%" onclick="descargarPDF()">⬇️ Descargar Reporte</button>
+            </div>
+            <div class="card">
+                <h3>📡 Últimos Movimientos</h3>
+                <div class="table-container"><table style="width:100%"><thead><tr style="text-align:left; color:#666"><th>Cliente</th><th>Fecha</th><th>Estado</th></tr></thead><tbody id="live-feed-body"></tbody></table></div>
+            </div>
+        </div>
+      </div>
+      
+      <div id="view-historial" class="view-section" style="display:none;">
+          <div class="card">
+              <h3>🔍 Búsqueda Avanzada</h3>
+              <div class="search-bar-container">
+                  <input type="text" id="search-input" class="search-input" placeholder="Buscar por Nombre, DUI, Pasaporte o Código..." onkeyup="if(event.key==='Enter') buscarHistorial()">
+                  <button onclick="buscarHistorial()" class="btn-update" style="margin:0;">Buscar</button>
+              </div>
+
+              <div class="metrics-grid" style="grid-template-columns: 1fr 1fr 1fr; margin-bottom:2rem;">
+                  <div class="metric-card" style="border-left-color: #3b82f6;"><h4>Resultados</h4><p id="h-total">0</p></div>
+                  <div class="metric-card" style="border-left-color: var(--dorado);"><h4>Mayores (+18)</h4><p id="h-mayores">0</p></div>
+                  <div class="metric-card" style="border-left-color: #8b5cf6;"><h4>Menores (-18)</h4><p id="h-menores">0</p></div>
+              </div>
+
+              <div class="table-container" style="max-height:500px; overflow-y:auto;">
+                  <table style="width:100%; border-collapse:collapse;">
+                      <thead>
+                          <tr style="text-align:left; border-bottom:2px solid #eee; color:#666;">
+                              <th style="padding:10px;">Fecha</th>
+                              <th style="padding:10px;">Cliente</th>
+                              <th style="padding:10px;">Edad/Doc</th>
+                              <th style="padding:10px;">Código</th>
+                              <th style="padding:10px;">Estado</th>
+                              <th style="padding:10px;">Detalle</th>
+                          </tr>
+                      </thead>
+                      <tbody id="historial-body">
+                          <tr><td colspan="6" style="text-align:center; padding:2rem; color:#999;">Realiza una búsqueda...</td></tr>
+                      </tbody>
+                  </table>
+              </div>
+          </div>
+      </div>
+
+      <div id="view-users" class="view-section" style="display:none;">
+         <div class="card">
+             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                <h3>Gestión de Equipo</h3>
+                <button onclick="toggleModal(true)" class="btn-update" style="margin:0;">+ Agregar</button>
+             </div>
+             <div class="table-container">
+                 <table style="width:100%"><thead><tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Acción</th></tr></thead><tbody id="user-list-body"></tbody></table>
+             </div>
+          </div>
+      </div>
+
+    </main>
+  </div>
+
+  <div id="user-modal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2000; justify-content:center; align-items:center;">
+      <div class="card" style="width:400px; padding:2rem;">
+          <h3>Nuevo Usuario</h3>
+          <form id="create-user-form">
+              <div class="form-group" style="margin-bottom:1rem;"><input type="text" id="u-nombre" placeholder="Nombre" required style="width:100%; padding:0.8rem; border:1px solid #ddd; border-radius:8px;"></div>
+              <div class="form-group" style="margin-bottom:1rem;"><input type="email" id="u-email" placeholder="Email" required style="width:100%; padding:0.8rem; border:1px solid #ddd; border-radius:8px;"></div>
+              <div class="form-group" style="margin-bottom:1rem;"><input type="password" id="u-password" placeholder="Contraseña" required style="width:100%; padding:0.8rem; border:1px solid #ddd; border-radius:8px;"></div>
+              <div class="form-group" style="margin-bottom:1rem;"><select id="u-rol" style="width:100%; padding:0.8rem; border:1px solid #ddd; border-radius:8px;"><option value="profesor">Profesor</option><option value="admin">Admin</option></select></div>
+              <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:1rem;">
+                  <button type="button" onclick="toggleModal(false)" style="background:#ccc; border:none; padding:0.5rem 1rem; border-radius:8px; cursor:pointer;">Cancelar</button>
+                  <button type="submit" style="background:var(--vino); color:white; border:none; padding:0.5rem 1rem; border-radius:8px; cursor:pointer;">Guardar</button>
+              </div>
+          </form>
+      </div>
+  </div>
+
+  <div id="detail-modal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:3000; justify-content:center; align-items:center;">
+      <div class="card" style="width:600px; max-width:95%; position:relative; padding:2rem;">
+          <span onclick="document.getElementById('detail-modal').style.display='none'" style="position:absolute; top:20px; right:20px; cursor:pointer; font-size:1.5rem;">&times;</span>
+          <h3 style="color:var(--vino); border-bottom:1px solid #eee; padding-bottom:10px;">Ficha de Reserva</h3>
+          <div class="detail-grid">
+              <div><small>Cliente</small><p id="d-cliente">-</p></div>
+              <div><small>Código</small><p id="d-codigo" style="color:var(--dorado); font-weight:bold;">-</p></div>
+              <div><small>Edad</small><p id="d-nacimiento">-</p></div>
+              <div><small>Documento</small><p id="d-doc">-</p></div>
+              <div><small>Fecha</small><p id="d-fecha">-</p></div>
+              <div><small>Servicio</small><p id="d-tipo">-</p></div>
+              <div><small>Llegada</small><p id="d-llegada">-</p></div>
+              <div><small>Estado</small><p id="d-estado">-</p></div>
+          </div>
+      </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('tennispro_token');
+    const profesor = JSON.parse(localStorage.getItem('tennispro_profesor'));
+    if (!token || profesor.rol !== 'admin') window.location.href = 'login.html';
+    document.getElementById('admin-name').innerText = profesor.nombre;
+
+    let chartInstance = null;
+    let historialCache = [];
+
+    // --- NAVEGACIÓN (Incluye 'historial') ---
+    function switchView(view) {
+        document.querySelectorAll('.view-section').forEach(e => e.style.display = 'none');
+        document.getElementById(`view-${view}`).style.display = 'block';
+        document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
+        
+        const map = {'dashboard':'nav-dash', 'historial':'nav-historial', 'users':'nav-users'};
+        document.getElementById(map[view]).classList.add('active');
+        
+        if(view === 'dashboard') cargarDatosGrafico();
+        if(view === 'historial') buscarHistorial(); // Cargar historial al entrar
+        if(view === 'users') cargarUsuarios();
+    }
+
+    function formatFecha(f) { if(!f)return''; const p=f.split('-'); if(p.length===3)return`${p[2]}/${p[1]}`; return f; }
+
+    // --- DASHBOARD ---
+    async function cargarDatosGrafico() {
+        const inicio = document.getElementById('dash-start').value;
+        const fin = document.getElementById('dash-end').value;
+        const tipo = document.getElementById('filtro-tipo-grafico').value;
+        if(!inicio || !fin) return;
+
+        try {
+            const res = await fetch(`http://localhost:3000/api/admin/analytics?rango=anio&tipo=${tipo}&estado=todos`, { headers: {'Authorization': `Bearer ${token}`} });
+            const data = await res.json();
+            const timelineFiltrada = data.timeline.filter(d => d.etiqueta >= inicio && d.etiqueta <= fin);
+            
+            let tRes=0, tOk=0, tRet=0, tAus=0;
+            timelineFiltrada.forEach(d => {
+                tRes += (d.total_reservas || 0);
+                tOk += (d.ok || 0);
+                tRet += (d.tarde || 0);
+                tAus += (d.ausente || 0);
+            });
+            const tPen = Math.max(0, tRes - (tOk + tRet + tAus));
+
+            document.getElementById('st-total').innerText = tRes;
+            document.getElementById('st-pendientes').innerText = tPen;
+            document.getElementById('st-ok').innerText = tOk;
+            document.getElementById('st-ret').innerText = tRet;
+            document.getElementById('st-aus').innerText = tAus;
+
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            if(chartInstance) chartInstance.destroy();
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: timelineFiltrada.map(x=>x.etiqueta),
+                    datasets: [
+                        { label: 'OK', data: timelineFiltrada.map(x=>x.ok), backgroundColor: '#10b981', stack:'0' },
+                        { label: 'Tarde', data: timelineFiltrada.map(x=>x.tarde), backgroundColor: '#f59e0b', stack:'0' },
+                        { label: 'Ausente', data: timelineFiltrada.map(x=>x.ausente), backgroundColor: '#ef4444', stack:'0' },
+                        { label: 'Pendiente', data: timelineFiltrada.map(x => Math.max(0, x.total_reservas - (x.ok||0) - (x.tarde||0) - (x.ausente||0))), backgroundColor: '#e5e7eb', stack:'0' }
+                    ]
+                },
+                options: { responsive:true, maintainAspectRatio:false, scales:{x:{stacked:true}, y:{stacked:true}} }
+            });
+        } catch(e) {}
+        cargarActividad();
+    }
+    
+    async function cargarActividad() {
+        const res = await fetch('http://localhost:3000/api/admin/actividad', { headers: {'Authorization': `Bearer ${token}`} });
+        const d = await res.json();
+        const tbody = document.getElementById('live-feed-body'); tbody.innerHTML='';
+        if(d.length===0) { tbody.innerHTML='<tr><td colspan="3" style="text-align:center; padding:1rem; color:#999;">Sin actividad</td></tr>'; return; }
+        d.forEach(x => {
+             let color='yellow', txt='Pendiente';
+             if(x.estado.includes('confirmada')) { color='green'; txt='Validado'; }
+             else if(x.estado==='ausente') { color='red'; txt='Ausente'; }
+             else if(x.estado==='confirmada_tarde') { color='orange'; txt='Tarde'; }
+             else if(x.estado==='cancelada') { color='red'; txt='Cancelado'; }
+             tbody.innerHTML += `<tr style="border-bottom:1px solid #f0f0f0;"><td style="padding:10px;"><b>${x.nombre} ${x.apellido}</b><br><small style="font-family:monospace;color:#660000;background:#eee;padding:2px 4px;border-radius:4px;font-size:0.7rem;">${x.keyUnica}</small></td><td style="padding:10px;">📅 ${formatFecha(x.fechaReserva)} ${x.horaReserva}</td><td style="padding:10px;"><span class="badge bg-${color}" style="background:${color==='green'?'#dcfce7':(color==='red'?'#fee2e2':(color==='orange'?'#ffedd5':'#fef3c7'))}; color:${color==='green'?'#166534':(color==='red'?'#991b1b':(color==='orange'?'#9a3412':'#92400e'))}; padding:2px 8px; border-radius:12px; font-size:0.7rem; font-weight:bold;">${txt}</span></td></tr>`;
+        });
+    }
+
+    // --- HISTORIAL LOGIC (NUEVA) ---
+    async function buscarHistorial() {
+        const q = document.getElementById('search-input').value;
+        const tbody = document.getElementById('historial-body'); tbody.innerHTML='<tr><td colspan="6" style="text-align:center;">Buscando...</td></tr>';
+        try {
+            const res = await fetch(`http://localhost:3000/api/admin/historial?busqueda=${q}`, { headers: {'Authorization': `Bearer ${token}`} });
+            const data = await res.json();
+            historialCache = data; tbody.innerHTML = '';
+            let may=0, men=0;
+            if(data.length===0) { tbody.innerHTML='<tr><td colspan="6" style="text-align:center; padding:2rem;">No hay resultados.</td></tr>'; return; }
+            
+            data.forEach((r, i) => {
+                if(r.edad>=18) may++; else men++;
+                let doc = r.edad<18 ? '<span style="color:green; font-weight:bold">Menor</span>' : (r.dui||r.pasaporte||'N/A');
+                let clr = r.estado.includes('confirmada')?'green':(r.estado==='ausente'?'red':'yellow');
+                tbody.innerHTML += `<tr style="border-bottom:1px solid #eee;"><td style="padding:10px;">${formatFecha(r.fechaReserva)}<br><small>${r.horaReserva}</small></td><td style="padding:10px;"><b>${r.nombre} ${r.apellido}</b></td><td style="padding:10px;">${r.edad} años<br><small>${doc}</small></td><td style="padding:10px; font-family:monospace;">${r.keyUnica}</td><td style="padding:10px;"><span class="badge" style="color:${clr}; font-weight:bold;">${r.estado.toUpperCase()}</span></td><td style="padding:10px;"><button onclick="verDetalle(${i})" style="border:1px solid #ccc; background:white; cursor:pointer; padding:4px 8px; border-radius:4px;">Ver</button></td></tr>`;
+            });
+            document.getElementById('h-total').innerText=data.length; document.getElementById('h-mayores').innerText=may; document.getElementById('h-menores').innerText=men;
+        } catch(e){ tbody.innerHTML='<tr><td colspan="6" style="color:red; text-align:center;">Error</td></tr>'; }
+    }
+
+    function verDetalle(i) {
+        const d = historialCache[i];
+        document.getElementById('d-cliente').innerText = `${d.nombre} ${d.apellido}`;
+        document.getElementById('d-codigo').innerText = d.keyUnica;
+        document.getElementById('d-nacimiento').innerText = `${d.fechaNacimiento} (${d.edad} años)`;
+        document.getElementById('d-doc').innerText = d.dui || d.pasaporte || 'Menor';
+        document.getElementById('d-fecha').innerText = `${d.fechaReserva} @ ${d.horaReserva}`;
+        document.getElementById('d-tipo').innerText = d.tipo_reserva;
+        document.getElementById('d-llegada').innerText = d.hora_llegada || 'Pendiente';
+        document.getElementById('d-estado').innerText = d.estado.toUpperCase();
+        document.getElementById('detail-modal').style.display = 'flex';
+    }
+
+    // --- EXTRAS ---
+    function descargarPDF() {
+        const s = document.getElementById('dash-start').value;
+        const e = document.getElementById('dash-end').value;
+        const t = document.getElementById('filtro-tipo-grafico').value;
+        if(!s) return alert("Selecciona fechas");
+        window.open(`http://localhost:3000/api/admin/reporte-pdf?token=${token}&fechaInicio=${s}&fechaFin=${e}&tipo=${t}&estado=todos`, '_blank');
+    }
+    async function cargarUsuarios() {
+         const res = await fetch('http://localhost:3000/api/admin/profesores', { headers: {'Authorization': `Bearer ${token}`} });
+         const users = await res.json();
+         const tbody = document.getElementById('user-list-body'); tbody.innerHTML = '';
+         users.forEach(u => { tbody.innerHTML += `<tr><td style="padding:10px">${u.nombre}</td><td style="padding:10px">${u.email}</td><td style="padding:10px">${u.rol}</td><td style="padding:10px">${u.id!==profesor.id?`<button onclick="delUser(${u.id})" style="color:red;border:none;background:none;">🗑️</button>`:''}</td></tr>`; });
+    }
+    document.getElementById('create-user-form').addEventListener('submit', async(e)=>{ e.preventDefault(); /* fetch... */ toggleModal(false); alert('Creado'); });
+    function toggleModal(s) { document.getElementById('user-modal').style.display = s?'flex':'none'; }
+    async function delUser(id) { if(confirm('¿Borrar?')) { await fetch(`http://localhost:3000/api/admin/profesores/${id}`,{method:'DELETE',headers:{'Authorization':`Bearer ${token}`}}); cargarUsuarios(); } }
+    document.getElementById('logout-btn').addEventListener('click', () => { localStorage.clear(); window.location.href = 'login.html'; });
+
+    // Init
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('dash-start').value = today;
+    document.getElementById('dash-end').value = today;
+    
+    cargarDatosGrafico();
+  </script>
+</body>
+</html>

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Círculo Militar - Reservas de Canchas</title>
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="styles.css"> 
+  
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+</head>
+<body>
+
+  <div id="root">
+    
+    <div class="lang-switcher">
+      <button id="lang-toggle">English</button>
+    </div>
+    
+    <h1 class="logo-title">CÍRCULO MILITAR</h1>
+    <h2 id="form-title">Reserva de Canchas</h2>
+    
+    <form id="reserva-form">
+      <div class="form-group"><input type="text" id="nombre" name="nombre" placeholder="Nombre completo" required></div>
+      <div class="form-group"><input type="text" id="apellido" name="apellido" placeholder="Apellido completo" required></div>
+      <div class="form-group"><input type="tel" id="celular" name="celular" placeholder="Número de Celular" pattern="[0-9]{8}" maxlength="8" required></div>
+      
+      <div class="form-group"><input type="text" id="fechaNacimiento" name="fechaNacimiento" placeholder="Fecha de Nacimiento 📅" required></div>
+
+      <div class="form-group">
+        <select id="nacionalidad" name="nacionalidad" required>
+            <option value="" id="opt-nacionalidad">Nacionalidad</option>
+            <option value="salvadoreno" id="opt-salvadoreno">Salvadoreño</option>
+            <option value="extranjero" id="opt-extranjero">Extranjero</option>
+        </select>
+      </div>
+      <div id="dui-group" class="form-group hidden"><input type="text" id="dui" name="dui" pattern="[0-9]{9}" maxlength="9" inputmode="numeric" placeholder="DUI (solo si eres mayor de 18)" disabled></div>
+      <div id="pasaporte-group" class="form-group hidden"><input type="text" id="pasaporte" name="pasaporte" pattern="[A-Za-z0-9]{1,9}" maxlength="9" placeholder="Pasaporte (solo si eres mayor de 18)" disabled></div>
+      
+      <div class="form-group">
+        <select id="tipoReserva" name="tipoReserva" required>
+            <option value="" id="opt-tipo-reserva">Tipo de Reserva</option>
+            <option value="solo_cancha" id="opt-solo-cancha">🎾 Solo Cancha</option>
+            <option value="con_instructor" id="opt-con-instructor">👨‍🏫 Cancha + Instructor</option>
+        </select>
+      </div>
+
+      <div class="form-group"><input type="text" id="fechaReserva" name="fechaReserva" placeholder="Fecha de la Reserva 📅" required></div>
+      
+      <div class="form-group">
+        <select id="horaReserva" name="horaReserva" required>
+            <option value="" id="opt-hora">Hora ⏰</option>
+            <option value="07:00">7:00 AM</option><option value="08:00">8:00 AM</option><option value="09:00">9:00 AM</option>
+            <option value="10:00">10:00 AM</option><option value="11:00">11:00 AM</option><option value="12:00">12:00 PM</option>
+            <option value="13:00">1:00 PM</option><option value="14:00">2:00 PM</option><option value="15:00">3:00 PM</option>
+            <option value="16:00">4:00 PM</option><option value="17:00">5:00 PM</option><option value="18:00">6:00 PM</option>
+            <option value="19:00">7:00 PM</option>
+        </select>
+      </div>
+      
+      <button type="submit" id="btn-submit">Reservar mi Lugar</button>
+    </form>
+    <div id="status-message" class="message" style="display:none;"></div>
+  </div>
+
+  <div id="cancel-section" class="cancel-container">
+    <h3 id="cancel-title">¿Cancelar una Reserva?</h3>
+    <form id="cancel-form">
+      <div class="form-group">
+        <input type="text" id="keyUnica" name="keyUnica" placeholder="Ingresa tu CÓDIGO" required style="text-transform:uppercase; text-align:center; font-weight:bold; letter-spacing:2px;">
+      </div>
+      <button type="submit" id="btn-cancel" class="btn-cancelar-reserva">Cancelar Reserva</button>
+    </form>
+    <div id="cancel-status-message" class="message" style="display:none;"></div>
+  </div>
+
+  <script>
+    // --- Traducciones ---
+    const translations = {
+      es: {
+        title: "Reserva de Canchas", ph_nombre: "Nombre completo", ph_apellido: "Apellido completo", ph_celular: "Número de Celular",
+        ph_nacimiento: "Fecha de Nacimiento 📅", opt_nacionalidad: "Nacionalidad", opt_salvadoreno: "Salvadoreño", opt_extranjero: "Extranjero",
+        ph_dui: "DUI (solo si eres mayor de 18)", ph_pasaporte: "Pasaporte (solo si eres mayor de 18)", opt_tipo_reserva: "Tipo de Reserva",
+        opt_solo_cancha: "🎾 Solo Cancha", opt_con_instructor: "👨‍🏫 Cancha + Instructor", ph_fecha_reserva: "Fecha de la Reserva 📅", opt_hora: "Hora ⏰",
+        btn_submit: "Reservar mi Lugar", status_enviando: "Enviando... ⏳", toggle_lang_btn: "English",
+        cancel_title: "¿Cancelar una Reserva?", ph_key: "Ingresa tu CÓDIGO", btn_cancel: "Cancelar Reserva",
+        cancel_success: "¡Reserva cancelada con éxito! ✅", cancel_not_found: "Error: No se encontró una reserva activa con ese código. ❌",
+      },
+      en: {
+        title: "Court Reservation", ph_nombre: "Full Name", ph_apellido: "Last Name", ph_celular: "Phone Number",
+        ph_nacimiento: "Date of Birth 📅", opt_nacionalidad: "Nationality", opt_salvadoreno: "Salvadoran", opt_extranjero: "Foreigner",
+        ph_dui: "DUI (Only if 18 or older)", ph_pasaporte: "Passport (Only if 18 or older)", opt_tipo_reserva: "Reservation Type",
+        opt_solo_cancha: "🎾 Court Only", opt_con_instructor: "👨‍🏫 Court + Instructor", ph_fecha_reserva: "Reservation Date 📅", opt_hora: "Time ⏰",
+        btn_submit: "Reserve my Spot", status_enviando: "Sending... ⏳", toggle_lang_btn: "Español",
+        cancel_title: "Cancel a Reservation?", ph_key: "Enter your CODE", btn_cancel: "Cancel Reservation",
+        cancel_success: "Reservation successfully cancelled! ✅", cancel_not_found: "Error: No active reservation found with that code. ❌",
+      }
+    };
+
+    let currentLang = 'es';
+    let fp_nacimiento, fp_reserva;
+    let form, statusMessage, nacionalidadInput, fechaNacimientoInput, duiGroup, duiInput, pasaporteGroup, pasaporteInput, fechaReservaInput, horaReservaSelect, langToggleBtn, formTitle, nombreInput, apellidoInput, celularInput, optNacionalidad, optSalvadoreno, optExtranjero, optHora, btnSubmit, cancelForm, cancelTitle, keyUnicaInput, btnCancel, cancelStatusMessage, tipoReservaInput, optTipoReserva, optSoloCancha, optConInstructor;
+
+    function showMessage(elementId, htmlContent, type) {
+        const element = document.getElementById(elementId);
+        element.innerHTML = htmlContent;
+        element.className = `message ${type}`;
+        element.style.display = 'block';
+    }
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      const t = translations[lang];
+      formTitle.textContent = t.title; langToggleBtn.textContent = t.toggle_lang_btn; btnSubmit.textContent = t.btn_submit;
+      cancelTitle.textContent = t.cancel_title; btnCancel.textContent = t.btn_cancel;
+      nombreInput.placeholder = t.ph_nombre; apellidoInput.placeholder = t.ph_apellido; celularInput.placeholder = t.ph_celular;
+      duiInput.placeholder = t.ph_dui; pasaporteInput.placeholder = t.ph_pasaporte; keyUnicaInput.placeholder = t.ph_key;
+      optNacionalidad.textContent = t.opt_nacionalidad; optSalvadoreno.textContent = t.opt_salvadoreno; optExtranjero.textContent = t.opt_extranjero;
+      optTipoReserva.textContent = t.opt_tipo_reserva; optSoloCancha.textContent = t.opt_solo_cancha; optConInstructor.textContent = t.opt_con_instructor;
+      optHora.textContent = t.opt_hora;
+      
+      // Inicializamos Flatpickr CON los placeholders traducidos
+      initFlatpickr(lang);
+    }
+    
+    function calcularEdad(fechaNacimiento) {
+      if (!fechaNacimiento) return 0;
+      const hoy = new Date();
+      const [año, mes, dia] = fechaNacimiento.split('-').map(Number);
+      const cumple = new Date(año, mes - 1, dia);
+      let edad = hoy.getFullYear() - cumple.getFullYear();
+      const m = hoy.getMonth() - cumple.getMonth();
+      if (m < 0 || (m === 0 && hoy.getDate() < cumple.getDate())) { edad--; }
+      return edad;
+    }
+
+    function actualizarFormulario() {
+      const nacionalidad = nacionalidadInput.value;
+      const edad = calcularEdad(fechaNacimientoInput.value);
+      duiGroup.classList.add('hidden'); duiInput.required = false; duiInput.disabled = true;
+      pasaporteGroup.classList.add('hidden'); pasaporteInput.required = false; pasaporteInput.disabled = true;
+      if (edad >= 18) {
+        if (nacionalidad === 'salvadoreno') { duiGroup.classList.remove('hidden'); duiInput.required = true; duiInput.disabled = false; } 
+        else if (nacionalidad === 'extranjero') { pasaporteGroup.classList.remove('hidden'); pasaporteInput.required = true; pasaporteInput.disabled = false; }
+      }
+    }
+
+async function actualizarHorasDisponibles() { 
+        const fecha = fechaReservaInput.value;
+        const tipo = tipoReservaInput.value;
+        
+        // Resetear opciones antes de nada
+        Array.from(horaReservaSelect.options).forEach(o => {
+            o.disabled = false;
+            // Restaurar texto original si existe, si no, guardarlo
+            if (o.dataset.originalText) {
+                o.textContent = o.dataset.originalText;
+            } else {
+                o.dataset.originalText = o.textContent;
+            }
+            o.classList.remove('option-disabled');
+        });
+
+        if (!fecha || !tipo) return;
+
+        // --- LÓGICA 1: BLOQUEO POR HORARIO PASADO (TU PETICIÓN) ---
+        const ahora = new Date();
+        // Crear fecha seleccionada (truco para evitar problemas de zona horaria)
+        const fechaSeleccionada = new Date(fecha + 'T00:00:00'); 
+        const fechaHoy = new Date(); 
+        fechaHoy.setHours(0,0,0,0); // Resetear hora para comparar solo fechas
+
+        // Solo aplicamos esto si la fecha seleccionada es HOY
+        if (fechaSeleccionada.getTime() === fechaHoy.getTime()) {
+            const horaActual = ahora.getHours(); // Ej: 15 (3 PM)
+            
+            Array.from(horaReservaSelect.options).forEach(o => {
+                if (o.value) { // Ignorar la opción por defecto "Hora"
+                    // Convertir "13:00" a 13
+                    const horaOpcion = parseInt(o.value.split(':')[0]);
+                    
+                    // Si la hora de la opción es menor o igual a la actual, bloquear
+                    if (horaOpcion <= horaActual) {
+                        o.disabled = true;
+                        o.textContent = `${o.dataset.originalText} (Ya pasó 🕒)`;
+                        o.classList.add('option-disabled');
+                    }
+                }
+            });
+        }
+        // -------------------------------------------------------
+
+        // --- LÓGICA 2: BLOQUEO POR DISPONIBILIDAD (BACKEND) ---
+        try {
+            const res = await fetch(`http://localhost:3000/api/disponibilidad?fecha=${fecha}&tipo=${tipo}`);
+            const llenas = await res.json();
+            
+            Array.from(horaReservaSelect.options).forEach(o => {
+                // Si ya estaba deshabilitada por hora pasada, no la tocamos
+                if (!o.disabled && llenas.includes(o.value)) {
+                    o.disabled = true;
+                    o.textContent = `${o.dataset.originalText} (Lleno 🚫)`;
+                    o.classList.add('option-disabled');
+                }
+            });
+        } catch(e) { console.error(e); }
+    }
+
+    function initFlatpickr(lang) {
+        const langLocale = (lang === 'es') ? "es" : "default"; 
+        const t = translations[lang];
+        
+        if (fp_nacimiento) fp_nacimiento.destroy();
+        if (fp_reserva) fp_reserva.destroy();
+        
+        // Configuramos Flatpickr para usar el input de texto como calendario
+        fp_nacimiento = flatpickr("#fechaNacimiento", { 
+            dateFormat: "Y-m-d", 
+            maxDate: "today", 
+            locale: langLocale, 
+            onChange: function() { actualizarFormulario(); },
+            // Truco: usamos altInput para mostrar formato bonito si queremos, o dejamos el placeholder
+        });
+        
+        // Actualizamos el placeholder manualmente para que coincida con el idioma
+        document.getElementById('fechaNacimiento').placeholder = t.ph_nacimiento;
+
+        fp_reserva = flatpickr("#fechaReserva", { 
+            dateFormat: "Y-m-d", 
+            minDate: "today", 
+            locale: langLocale, 
+            onChange: function() { actualizarHorasDisponibles(); } 
+        });
+        
+        document.getElementById('fechaReserva').placeholder = t.ph_fecha_reserva;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Asignación
+      form = document.getElementById('reserva-form'); statusMessage = document.getElementById('status-message');
+      nacionalidadInput = document.getElementById('nacionalidad'); fechaNacimientoInput = document.getElementById('fechaNacimiento');
+      duiGroup = document.getElementById('dui-group'); duiInput = document.getElementById('dui');
+      pasaporteGroup = document.getElementById('pasaporte-group'); pasaporteInput = document.getElementById('pasaporte');
+      fechaReservaInput = document.getElementById('fechaReserva'); horaReservaSelect = document.getElementById('horaReserva');
+      langToggleBtn = document.getElementById('lang-toggle'); formTitle = document.getElementById('form-title');
+      nombreInput = document.getElementById('nombre'); apellidoInput = document.getElementById('apellido');
+      celularInput = document.getElementById('celular'); optNacionalidad = document.getElementById('opt-nacionalidad');
+      optSalvadoreno = document.getElementById('opt-salvadoreno'); optExtranjero = document.getElementById('opt-extranjero');
+      optHora = document.getElementById('opt-hora'); btnSubmit = document.getElementById('btn-submit');
+      cancelForm = document.getElementById('cancel-form'); cancelTitle = document.getElementById('cancel-title');
+      keyUnicaInput = document.getElementById('keyUnica'); btnCancel = document.getElementById('btn-cancel');
+      cancelStatusMessage = document.getElementById('cancel-status-message');
+      tipoReservaInput = document.getElementById('tipoReserva'); optTipoReserva = document.getElementById('opt-tipo-reserva');
+      optSoloCancha = document.getElementById('opt-solo-cancha'); optConInstructor = document.getElementById('opt-con-instructor');
+
+      langToggleBtn.addEventListener('click', () => { const newLang = (currentLang === 'es') ? 'en' : 'es'; setLanguage(newLang); });
+      nacionalidadInput.addEventListener('change', actualizarFormulario);
+      tipoReservaInput.addEventListener('change', actualizarHorasDisponibles);
+      
+      // --- SUBMIT DE RESERVA ---
+      form.addEventListener('submit', (event) => {
+        event.preventDefault(); 
+        showMessage('status-message', translations[currentLang].status_enviando, 'message');
+        
+        const formData = new FormData(form);
+        const data = {};
+        formData.forEach((value, key) => { data[key] = value; });
+        if (duiInput.disabled) delete data.dui;
+        if (pasaporteInput.disabled) delete data.pasaporte;
+        
+        fetch('http://localhost:3000/api/reservas', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data),
+        })
+        .then(response => response.json().then(data => ({ ok: response.ok, body: data })))
+        .then(res => {
+            if (!res.ok) throw new Error(res.body.message || 'Error desconocido.');
+            
+            // ÉXITO: MOSTRAR CÓDIGO REAL CON ESTILO
+            const nombre = document.getElementById('nombre').value;
+            const mensajeExito = `
+                <div style="padding:10px;">
+                    <strong style="font-size:1.2rem;">¡Reserva Confirmada! 🎉</strong><br>
+                    Hola ${nombre}, tu código es:<br><br>
+                    <span style="font-size: 2.2rem; font-weight: 900; color: #D4AF37; background:#fdfdfd; padding: 5px 15px; border-radius:10px; border:2px dashed #D4AF37; display:inline-block; letter-spacing: 3px;">
+                        ${res.body.keyUnica}
+                    </span>
+                    <br><br>
+                    <small style="color:#555;">Guarda este código, lo necesitarás para entrar.</small>
+                </div>
+            `;
+            showMessage('status-message', mensajeExito, 'success');
+            form.reset();
+            actualizarFormulario();
+            if(fp_nacimiento) fp_nacimiento.clear();
+            if(fp_reserva) fp_reserva.clear();
+        })
+        .catch(error => {
+          showMessage('status-message', error.message, 'error');
+        });
+      });
+
+      // Cancelar
+      cancelForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const keyUnica = keyUnicaInput.value.toUpperCase();
+        fetch('http://localhost:3000/api/reservas/cancelar', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ keyUnica: keyUnica }),
+        })
+        .then(res => res.json().then(data => ({status: res.status, body: data})))
+        .then(response => {
+             if(response.status === 200) {
+                 showMessage('cancel-status-message', response.body.message + " ✅", 'success');
+                 cancelForm.reset();
+             } else {
+                 showMessage('cancel-status-message', response.body.message + " ❌", 'error');
+             }
+        })
+        .catch(err => showMessage('cancel-status-message', "Error de conexión", 'error'));
+      });
+
+      actualizarFormulario();
+      setLanguage(currentLang); 
+    });
+  </script>
+</body>
+</html>

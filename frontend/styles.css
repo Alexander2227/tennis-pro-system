@@ -1,0 +1,253 @@
+/* ==================================
+   ARCHIVO: frontend/styles.css (MASTER)
+   Contiene: Variables, Estilos Base, y Estilos para Cliente/Login
+   ================================== */
+
+:root {
+  /* Paleta Círculo Militar */
+  --vino: #660000;
+  --vino-claro: #8a1c1c;
+  --dorado: #D4AF37;
+  --dorado-brillo: #f3c64a;
+  
+  /* Neutros */
+  --fondo-admin: #f3f4f6; /* Gris muy suave para Admin */
+  --blanco: #ffffff;
+  --texto-oscuro: #1e293b;
+  --texto-claro: #64748b;
+  
+  /* Estados */
+  --exito: #10b981;
+  --error: #ef4444;
+  --pendiente: #f59e0b;
+  
+  /* UI */
+  --sombra-suave: 0 4px 6px -1px rgba(0,0,0,0.05);
+  --sombra-fuerte-bg: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  --radio: 16px;
+}
+
+/* --- BASE Y TIPOGRAFÍA --- */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  color: var(--texto-oscuro);
+  line-height: 1.6;
+}
+
+/* --- COMPONENTES GLOBALES (Inputs, Botones) --- */
+.form-group { margin-bottom: 1.5rem; text-align: left; }
+
+input, select {
+  width: 100%; 
+  padding: 0.9rem 1.2rem; 
+  border: 1px solid #e2e8f0; 
+  border-radius: 12px;
+  font-size: 1rem; 
+  background: #f8fafc; 
+  transition: 0.2s;
+}
+
+input:focus, select:focus {
+  outline: none; 
+  border-color: var(--dorado); 
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+}
+
+/* Input deshabilitado (gris) */
+input:disabled { 
+  background: #e9ecef; 
+  cursor: not-allowed; 
+  color: #999; 
+}
+
+button {
+  width: 100%; 
+  padding: 1rem; 
+  border: none; 
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--dorado), #b8860b);
+  color: white; 
+  font-weight: 700; 
+  font-size: 1.1rem; 
+  cursor: pointer;
+  transition: all 0.3s ease-in-out; 
+  margin-top: 1rem;
+  box-shadow: 0 4px 12px rgba(184, 134, 11, 0.3);
+}
+
+button:hover { 
+  transform: translateY(-2px); 
+  opacity: 0.95; 
+}
+
+/* Mensajes */
+.message { 
+  padding: 1rem; 
+  border-radius: 8px; 
+  margin-top: 1rem; 
+  text-align: center; 
+  font-weight: 600; 
+  display: none; 
+}
+.success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+.error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+
+
+/* --- ESTILOS DE FONDO (Lógica de Clases) --- */
+
+/* 1. CLIENTE Y LOGIN (Por defecto si no hay clase especial) */
+body:not(.admin-body):not(.profesor-body) {
+  display: flex; 
+  flex-direction: column; 
+  justify-content: center; 
+  align-items: center; 
+  min-height: 100vh;
+  padding: 2rem 1rem;
+  /* FONDO DE CANCHA */
+  background-image: 
+    linear-gradient(135deg, rgba(102,0,0,0.85), rgba(75,0,0,0.9)),
+    url('fondo-cancha.jpg');
+  background-size: cover; 
+  background-position: center; 
+  background-attachment: fixed;
+}
+
+/* ... (resto de tu código CSS arriba) ... */
+
+/* Estilo para opciones deshabilitadas en el select (Horas pasadas) */
+.option-disabled { 
+  color: #ccc; 
+  font-style: italic; 
+  background-color: #f9f9f9;
+}
+
+/* 2. PROFESOR (Usa la clase .profesor-body) */
+body.profesor-body {
+  /* MISMO FONDO DE CANCHA, pero alineación distinta */
+  background-image: 
+    linear-gradient(135deg, rgba(102,0,0,0.85), rgba(75,0,0,0.9)),
+    url('fondo-cancha.jpg');
+  background-size: cover; 
+  background-position: center; 
+  background-attachment: fixed;
+  display: flex; 
+  justify-content: center; 
+  align-items: center; /* Centrado */
+  min-height: 100vh; 
+  padding: 2rem;
+}
+
+/* 3. ADMIN (Usa la clase .admin-body) */
+body.admin-body {
+  background-image: none !important; /* SIN FONDO DE CANCHA */
+  background-color: var(--fondo-admin); /* Gris profesional */
+  display: block !important; 
+  min-height: 100vh;
+}
+
+
+/* --- TARJETAS DE CLIENTE/LOGIN (Estilos Específicos) --- */
+#root {
+  background: var(--blanco); 
+  padding: 2.5rem; 
+  border-radius: 24px;
+  box-shadow: var(--sombra-fuerte-bg); 
+  width: 100%; 
+  max-width: 400px;
+  position: relative; 
+  z-index: 10; 
+  margin-bottom: 1.5rem;
+}
+
+.logo-title { 
+  color: var(--vino); 
+  font-size: 2.2rem; 
+  font-weight: 800; 
+  text-align: center; 
+  margin-bottom: 0.5rem; 
+  letter-spacing: -0.5px; 
+}
+
+h2 { 
+  text-align: center; 
+  font-size: 1.1rem; 
+  color: var(--texto-claro); 
+  margin-bottom: 2rem; 
+  font-weight: 500; 
+}
+
+/* Sección Cancelar */
+.cancel-container {
+  background: var(--blanco); 
+  padding: 2.5rem; 
+  border-radius: var(--radio); 
+  box-shadow: var(--sombra-fuerte-bg); 
+  width: 100%; 
+  max-width: 400px; 
+  text-align: center; 
+  margin-top: 1.5rem;
+}
+
+.cancel-container h3 { 
+  color: var(--error); 
+  margin-bottom: 1.5rem; 
+  font-size: 1.2rem; 
+  font-weight: 800; 
+}
+
+.cancel-container input { 
+  text-align: center; 
+  font-weight: 700; 
+  letter-spacing: 2px; 
+  font-size: 1.2rem; 
+  text-transform: uppercase; 
+}
+
+.btn-cancelar-reserva { 
+  background: var(--error); 
+  box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3); 
+}
+
+.btn-cancelar-reserva:hover { 
+  background: #dc2626; 
+}
+
+/* Lang Switcher Sutil */
+.lang-switcher { 
+  position: absolute; 
+  top: 1rem; 
+  right: 1.5rem; 
+  z-index: 20; 
+}
+
+.lang-switcher button {
+  background: transparent; 
+  color: var(--vino); 
+  border: 1px solid var(--dorado);
+  padding: 0.3rem 0.6rem; 
+  font-size: 0.75rem; 
+  font-weight: 600; 
+  width: auto; 
+  margin: 0;
+  box-shadow: none; 
+  border-radius: 5px; 
+  text-transform: uppercase;
+}
+
+.lang-switcher button:hover { 
+  background: var(--dorado); 
+  color: var(--vino); 
+}
+
+/* Clases utilitarias */
+.hidden { display: none; }
+
+/* Estilos Compartidos Admin/Profe */
+.nav-item {
+  display: flex; align-items: center; gap: 10px; padding: 1rem 1.2rem; margin-bottom: 0.8rem; 
+  border-radius: 12px; cursor: pointer; transition: all 0.3s ease; font-weight: 500;
+}
+.nav-item.active { background: var(--dorado); color: var(--vino); font-weight: 700; box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3); }

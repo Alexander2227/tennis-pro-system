@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Profesor - Círculo Militar</title>
+  
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="professor.css"> 
+</head>
+<body class="profesor-body"> 
+  
+  <div class="profesor-layout">
+    
+    <div class="profesor-header">
+      <div>
+        <h1>Panel de Profesor</h1>
+        <p id="profesor-name">Cargando...</p>
+      </div>
+      <button class="btn-logout" id="logout-btn">Cerrar Sesión</button>
+    </div>
+
+    <div class="profesor-card">
+      <h3>Validar Asistencia</h3>
+      <div class="input-group">
+        <input type="text" id="codigo-reserva" placeholder="CÓDIGO" maxlength="10" style="text-transform:uppercase;">
+      </div>
+      <button onclick="validarCodigo()">Validar Código</button>
+      <div id="validation-message" class="message" style="display:none; margin-top:1.5rem;"></div>
+    </div>
+
+    <div class="profesor-card">
+      <h3>Rendimiento</h3>
+      
+      <div class="metric-container">
+        <div class="metric-item">
+          <p class="metric-value" id="clases-hoy">0</p>
+          <p class="metric-label">Clases Hoy</p>
+        </div>
+        <div class="metric-item">
+          <p class="metric-value" id="clases-semana">0</p>
+          <p class="metric-label">Clases Sem.</p>
+        </div>
+        <div class="metric-item">
+          <p class="metric-value" id="canchas-semana" style="color:var(--vino)">0</p>
+          <p class="metric-label">Canchas Sem.</p>
+        </div>
+      </div>
+      
+      <div class="pending-classes">
+        <h4>Próximas Clases (Agenda):</h4>
+        <ul id="pending-list">
+          <li class="no-pending">Cargando...</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const token = localStorage.getItem('tennispro_token');
+    const profesor = JSON.parse(localStorage.getItem('tennispro_profesor'));
+    
+    if (!token) {
+      window.location.href = 'login.html';
+    } else {
+      document.getElementById('profesor-name').innerText = profesor.nombre;
+    }
+
+    // --- VALIDAR ASISTENCIA ---
+    async function validarCodigo() {
+      const codigo = document.getElementById('codigo-reserva').value.toUpperCase();
+      const msgDiv = document.getElementById('validation-message');
+      
+      if (!codigo) return;
+
+      try {
+        const res = await fetch('http://localhost:3000/api/profesor/validar-asistencia', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ keyUnica: codigo })
+        });
+        const data = await res.json();
+
+        msgDiv.style.display = 'block';
+        msgDiv.innerText = data.message;
+        msgDiv.className = res.ok ? 'message success' : 'message error';
+        
+        if (res.ok) { 
+            document.getElementById('codigo-reserva').value = ''; 
+            actualizarDatos(); 
+        }
+      } catch (error) {
+        msgDiv.innerText = 'Error de conexión'; msgDiv.className = 'message error'; msgDiv.style.display = 'block';
+      }
+    }
+
+    // --- HELPER FECHA ---
+    function formatearFecha(fechaStr) {
+        if (!fechaStr) return '';
+        const partes = fechaStr.split('-'); 
+        if (partes.length === 3) return `${partes[2]}/${partes[1]}`; // DD/MM
+        return fechaStr;
+    }
+
+    // --- CARGAR DATOS ---
+    async function actualizarDatos() {
+        try {
+            // 1. Métricas (Ahora trae 3 valores)
+            const resM = await fetch('http://localhost:3000/api/profesor/metrics', { headers: { 'Authorization': `Bearer ${token}` } });
+            const metrics = await resM.json();
+            document.getElementById('clases-hoy').innerText = metrics.clasesHoy;
+            document.getElementById('clases-semana').innerText = metrics.clasesSemana;
+            document.getElementById('canchas-semana').innerText = metrics.canchasSemana || 0; // Nuevo campo
+
+            // 2. Lista Pendientes
+            const resP = await fetch('http://localhost:3000/api/profesor/pending-classes', { headers: { 'Authorization': `Bearer ${token}` } });
+            const list = await resP.json();
+            const ul = document.getElementById('pending-list'); ul.innerHTML = '';
+            
+            if (list.length === 0) {
+                ul.innerHTML = '<li class="no-pending">No hay clases pendientes.</li>';
+            } else {
+                list.forEach(c => {
+                    const fecha = formatearFecha(c.fechaReserva);
+                    
+                    // Emojis y Colores
+                    let tipoHTML = '';
+                    if (c.tipo_reserva === 'con_instructor') {
+                        tipoHTML = '<span class="type-badge" style="background:#fff8e1; color:#d4af37;">👨‍🏫 Profe</span>';
+                    } else {
+                        tipoHTML = '<span class="type-badge" style="background:#e8f5e9; color:#1b5e20;">🎾 Cancha</span>';
+                    }
+
+                    ul.innerHTML += `
+                        <li>
+                            <div style="display:flex; flex-direction:column; align-items:flex-start;">
+                                <div>
+                                    <span class="date-badge">📅 ${fecha}</span>
+                                    <span class="time-text">${c.horaReserva}</span>
+                                </div>
+                            </div>
+                            <div style="text-align:right;">
+                                <span class="name-text">${c.nombreCliente} ${c.apellidoCliente}</span><br>
+                                ${tipoHTML}
+                            </div>
+                        </li>`;
+                });
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    document.getElementById('logout-btn').addEventListener('click', () => { localStorage.clear(); window.location.href = 'login.html'; });
+    actualizarDatos(); setInterval(actualizarDatos, 10000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,165 @@
+/* ==================================
+   ARCHIVO: frontend/historial.css
+   DISEÑO PREMIUM PARA BITÁCORA
+   ================================== */
+
+/* --- 1. CONTENEDOR PRINCIPAL --- */
+/* Le damos aire y limpieza al fondo */
+.history-section {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* --- 2. BARRA DE BÚSQUEDA Y FILTROS (Estilo "Cápsula") --- */
+.search-bar-container {
+    background: white;
+    padding: 0.8rem;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px -10px rgba(0,0,0,0.08);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    border: 1px solid #f1f5f9;
+    margin-bottom: 2rem;
+}
+
+.search-input {
+    flex: 1;
+    border: none;
+    background: #f8fafc;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    font-size: 1rem;
+    color: #333;
+    transition: all 0.3s;
+}
+.search-input:focus {
+    background: white;
+    box-shadow: inset 0 0 0 2px var(--dorado);
+    outline: none;
+}
+
+.btn-search {
+    background: linear-gradient(135deg, var(--vino), #4a0404);
+    color: white;
+    border: none;
+    padding: 1rem 2.5rem;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(102, 0, 0, 0.2);
+    transition: transform 0.2s;
+}
+.btn-search:hover { transform: translateY(-2px); }
+
+/* --- 3. TARJETAS DE MÉTRICAS (KPIs) --- */
+.demographics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.demo-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    border: 1px solid #f0f0f0;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s;
+}
+.demo-card:hover { transform: translateY(-5px); }
+
+/* Línea decorativa lateral */
+.demo-card::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 6px;
+    background: #ddd; /* Color default */
+}
+/* Colores específicos por tarjeta se asignan en HTML o aquí */
+.card-blue::before { background: #3b82f6; }
+.card-gold::before { background: var(--dorado); }
+.card-purple::before { background: #8b5cf6; }
+.card-cyan::before { background: #06b6d4; }
+
+.demo-card h4 {
+    margin: 0; font-size: 0.75rem; letter-spacing: 1px; 
+    color: #94a3b8; text-transform: uppercase; font-weight: 800;
+}
+.demo-card p {
+    margin: 0.5rem 0 0; font-size: 2.5rem; 
+    font-weight: 900; color: var(--texto-oscuro);
+}
+
+/* --- 4. TABLA MODERNA --- */
+.history-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 15px 40px -10px rgba(0,0,0,0.08);
+    overflow: hidden; /* Para que el header no se salga */
+    border: 1px solid #f1f5f9;
+}
+
+.history-table { width: 100%; border-collapse: collapse; }
+
+.history-table th {
+    background: #f8fafc;
+    padding: 1.2rem 1.5rem;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.history-table td {
+    padding: 1.2rem 1.5rem;
+    border-bottom: 1px solid #f1f5f9;
+    color: #333;
+    font-size: 0.95rem;
+    vertical-align: middle;
+}
+
+.history-table tr:last-child td { border-bottom: none; }
+.history-table tr:hover { background-color: #fdfdfd; }
+
+/* Texto secundario en la tabla */
+.sub-text { display: block; font-size: 0.8rem; color: #94a3b8; margin-top: 4px; }
+.main-text { font-weight: 600; color: var(--texto-oscuro); }
+
+/* --- 5. BADGES (PÍLDORAS) --- */
+.badge {
+    padding: 6px 12px;
+    border-radius: 50px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-block;
+}
+.bg-green { background: #dcfce7; color: #166534; }
+.bg-red { background: #fee2e2; color: #991b1b; }
+.bg-yellow { background: #fef3c7; color: #b45309; }
+.bg-orange { background: #ffedd5; color: #9a3412; }
+.bg-gray { background: #f1f5f9; color: #475569; }
+
+/* --- 6. BOTÓN ACCIÓN TABLA --- */
+.btn-view-detail {
+    background: white;
+    border: 1px solid #e2e8f0;
+    color: #64748b;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-view-detail:hover {
+    border-color: var(--dorado);
+    color: var(--dorado);
+    background: #fffdf5;
+    box-shadow: 0 4px 10px rgba(212, 175, 55, 0.15);
+}
